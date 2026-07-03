@@ -41,4 +41,24 @@ def draw():
 def update():
     pass
 
+def on_mouse_down(pos):
+    global game_state, sound_enabled
+
+    # menüdeysek tıklamaların sonuçları
+    if game_state == "menu":
+        # tıklanan nokta play butonunun içinde mi?
+        if play_btn.collidepoint(pos):
+            print("Emin misin? Basarilar!")
+            game_state = "play"
+        
+        # tıklanan nokta sound butonunun içinde mi?
+        elif sound_btn.collidepoint(pos):
+            sound_enabled = not sound_enabled # sound_enabled'ı toggle et (true ise false, false ise true yap)
+            print(f"Ses durumu: {sound_enabled}")
+
+        elif exit_btn.collidepoint(pos):
+            print("Olamaz! Nereye gidiyorsun?")
+            exit()
+
+
 pgzrun.go()
