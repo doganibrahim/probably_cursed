@@ -103,7 +103,46 @@ class Player(Entity):
             self.grid_x = new_x
             self.grid_y = new_y
 
+class Enemy(Entity):
+    def __init__(self, grid_x, grid_y, base_name, frame_counts, patrol_axis, patrol_dist):
+        super().__init__(grid_x, grid_y, base_name, frame_counts)
+
+        self.start_x = grid_x
+        self.start_y = grid_y
+        self.patrol_axis = patrol_axis # "x ekseninde mi y ekseninde mi gezecek?
+        self.patrol_dist = patrol_dist # merkezden kaç adım uzağa gidebilri?
+
+        self.direction = 1
+        self.move_timer = 0
+
+    def bot_move(self):
+            self.move_timer += 1
+            if self.move_timer >= 60:
+                self.move_timer = 0
+
+                if self.patrol_axis == "x":
+                    new_x = self.grid_x + self.direction
+
+                    # menzilini aşmışsa veya ekranın dışına çıkmışsa
+                    if abs(new_x - self.start_x) >= self.patrol_dist or not (0 <= new_x < COLS):
+                        self.direction *= -1
+                        new_x = self.grid_x + self.direction
+
+                    self.grid_x = new_x
+
+                elif self.patrol_axis == "y":
+                    new_y = self.grid_y + self.direction
+                    
+                    if abs(new_y - self.start_y) >= self.patrol_dist or not (0 <= new_y < ROWS):
+                        self.direction *= -1
+                        new_y = self.grid_y + self.direction
+                    
+                    self.grid_y = new_y
+
+
+
 our_hero = Player(0, 0, "hero", {"idle": 2, "walk": 8})
+zombie = Enemy(10, 5, "zombie", {"idle": 2, "walk": 4}, "x", 3)
 
 def draw_grid():
     """
@@ -146,9 +185,14 @@ def draw():
     elif game_state == "play":
         draw_grid()
         our_hero.draw()
+        zombie.draw()
 
 def update():
     our_hero.update()
+
+    if game_state == "play":
+        zombie.bot_move()
+        zombie.update()
 
 def on_mouse_down(pos):
     global game_state, sound_enabled
