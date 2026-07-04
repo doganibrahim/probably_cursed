@@ -52,7 +52,18 @@ class Entity:
         rect = Rect((self.x, self.y), (TILE_SIZE, TILE_SIZE))
         screen.draw.filled_rect(rect, self.color)
 
-our_hero = Entity(0, 0, "red")
+class Player(Entity):
+    def move(self, dx, dy):
+        # gitmek istenen yeni konum
+        new_x = self.grid_x + dx
+        new_y = self.grid_y + dy
+
+        # ekrandan çıkmaması için
+        if 0 <= new_x < COLS and 0 <= new_y < ROWS:
+            self.grid_x = new_x
+            self.grid_y = new_y
+
+our_hero = Player(0, 0, "red")
 
 def draw_grid():
     """
@@ -118,5 +129,15 @@ def on_mouse_down(pos):
             print("Olamaz! Nereye gidiyorsun?")
             exit()
 
+def on_key_down(key):
+    if game_state == "play":
+        if key == keys.LEFT or key == keys.A:
+            our_hero.move(-1, 0)
+        elif key == keys.RIGHT or key == keys.D:
+            our_hero.move(1, 0)
+        elif key == keys.UP or key == keys.W:
+            our_hero.move(0, -1) # bilgisayarlar biraz garip
+        elif key == keys.DOWN or key == keys.S:
+            our_hero.move(0, 1)
 
 pgzrun.go()
