@@ -21,6 +21,39 @@ play_btn = Rect((400, 200), (200, 50))
 sound_btn = Rect((400, 300), (200, 50))
 exit_btn = Rect((400, 400), (200, 50))
 
+class Entity:
+    def __init__(self, grid_x, grid_y, color = "white"):
+        self.grid_x = grid_x
+        self.grid_y = grid_y
+
+        # ekrandaki gerçek konum
+        self.x = self.grid_x * TILE_SIZE
+        self.y = self.grid_y * TILE_SIZE
+
+        self.color = color
+        self.hp = 3
+        self.speed = 4
+
+    def update(self):
+        # hedef konum
+        target_x = self.grid_x * TILE_SIZE
+        target_y = self.grid_y * TILE_SIZE
+
+        if self.x < target_x:
+            self.x += min(self.speed, target_x - self.x)
+        elif self.x > target_x:
+            self.x -= min(self.speed, self.x - target_x)
+        if self.y < target_y:
+            self.y += min(self.speed, target_y - self.y)
+        elif self.y > target_y:
+            self.y -= min(self.speed, self.y - target_y)
+
+    def draw(self):
+        rect = Rect((self.x, self.y), (TILE_SIZE, TILE_SIZE))
+        screen.draw.filled_rect(rect, self.color)
+
+our_hero = Entity(0, 0, "red")
+
 def draw_grid():
     """
     Oyun alanini esit karelere boler.
@@ -61,9 +94,10 @@ def draw():
 
     elif game_state == "play":
         draw_grid()
+        our_hero.draw()
 
 def update():
-    pass
+    our_hero.update()
 
 def on_mouse_down(pos):
     global game_state, sound_enabled
