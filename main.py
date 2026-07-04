@@ -139,8 +139,6 @@ class Enemy(Entity):
                     
                     self.grid_y = new_y
 
-
-
 our_hero = Player(0, 0, "hero", {"idle": 2, "walk": 8})
 zombie = Enemy(10, 5, "zombie", {"idle": 2, "walk": 4}, "x", 3)
 
@@ -187,12 +185,35 @@ def draw():
         our_hero.draw()
         zombie.draw()
 
+        # sol üstte canımız
+        screen.draw.text(f"CAN: {our_hero.hp}", topleft=(20, 20), fontsize=40, color="red")
+
+    # maalesef kaybettik
+    elif game_state == "game_over":
+        screen.draw.text("OYUN BITTI!", center=(500, 250), fontsize=80, color="red")
+        screen.draw.text("Menuye Don", center=(500, 350), fontsize=40, color="white")
+
 def update():
+    global game_state
     our_hero.update()
 
     if game_state == "play":
         zombie.bot_move()
         zombie.update()
+
+        # kahramanımız ve zombi aynı hücredeyse yandık
+        if our_hero.grid_x == zombie.grid_x and our_hero.grid_y == zombie.grid_y:
+            our_hero.hp -= 1
+            
+            # hop başlangıç noktasına ışınlan
+            our_hero.grid_x = 0
+            our_hero.grid_y = 0
+            our_hero.x = 0
+            our_hero.y = 0
+            
+            # can sıfırlandıysa
+            if our_hero.hp <= 0:
+                game_state = "game_over"
 
 def on_mouse_down(pos):
     global game_state, sound_enabled
@@ -212,6 +233,11 @@ def on_mouse_down(pos):
         elif exit_btn.collidepoint(pos):
             print("Olamaz! Nereye gidiyorsun?")
             exit()
+
+    # game over ekranındayken tıklarsak menüye dönelim ve canı fulleyelim
+    elif game_state == "game_over":
+        game_state = "menu"
+        our_hero.hp = 3
 
 def on_key_down(key):
     if game_state == "play":
