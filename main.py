@@ -22,7 +22,7 @@ sound_btn = Rect((400, 300), (200, 50))
 exit_btn = Rect((400, 400), (200, 50))
 
 class Entity:
-    def __init__(self, grid_x, grid_y, img):
+    def __init__(self, grid_x, grid_y, base_name, frame_counts):
         self.grid_x = grid_x
         self.grid_y = grid_y
 
@@ -33,10 +33,23 @@ class Entity:
         self.hp = 3
         self.speed = 4
 
-        self.img = img
-        self.imgs = [f"{img}_1", f"{img}_2"]
+        self.base_name = base_name
+        self.frame_counts = frame_counts # örneğin {"idle": 2, "walk": 8}
+        self.state = "idle"
+
         self.frame_index = 0
         self.animation_timer = 0
+        self.update_sprite_list()
+
+    def update_sprite_list(self):
+        self.imgs = []
+
+        # o state için kaç görsel var?
+        count = self.frame_counts[self.state]
+
+        for i in range (1, count + 1):
+            self.imgs.append(f"{self.base_name}_{self.state}_{i}")
+
         self.current_img = self.imgs[self.frame_index]
 
     def update(self):
@@ -44,19 +57,36 @@ class Entity:
         target_x = self.grid_x * TILE_SIZE
         target_y = self.grid_y * TILE_SIZE
 
+        is_moving = False
+        
         if self.x < target_x:
             self.x += min(self.speed, target_x - self.x)
+            is_moving = True
         elif self.x > target_x:
             self.x -= min(self.speed, self.x - target_x)
+            is_moving = True
         if self.y < target_y:
             self.y += min(self.speed, target_y - self.y)
+            is_moving = True
         elif self.y > target_y:
             self.y -= min(self.speed, self.y - target_y)
+            is_moving = True
+
+        new_state = "walk" if is_moving else "idle"
+
+        if self.state != new_state:
+            self.state = new_state
+            self.frame_index = 0
+            self.update_sprite_list()
 
         self.animation_timer += 1
-        if self.animation_timer >= 30:
+        if self.animation_timer >= 6 and self.state == "walk":
             self.animation_timer = 0
-            self.frame_index = (self.frame_index + 1) % 2
+            self.frame_index = (self.frame_index + 1) % len(self.imgs)
+            self.current_img = self.imgs[self.frame_index]
+        elif self.animation_timer >= 30 and self.state == "idle":
+            self.animation_timer = 0
+            self.frame_index = (self.frame_index + 1) % len(self.imgs)
             self.current_img = self.imgs[self.frame_index]
 
     def draw(self):
@@ -73,7 +103,7 @@ class Player(Entity):
             self.grid_x = new_x
             self.grid_y = new_y
 
-our_hero = Player(0, 0, "hero_idle")
+our_hero = Player(0, 0, "hero", {"idle": 2, "walk": 8})
 
 def draw_grid():
     """
