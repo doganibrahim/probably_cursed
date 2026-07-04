@@ -22,7 +22,7 @@ sound_btn = Rect((400, 300), (200, 50))
 exit_btn = Rect((400, 400), (200, 50))
 
 class Entity:
-    def __init__(self, grid_x, grid_y, color = "white"):
+    def __init__(self, grid_x, grid_y, img):
         self.grid_x = grid_x
         self.grid_y = grid_y
 
@@ -30,9 +30,14 @@ class Entity:
         self.x = self.grid_x * TILE_SIZE
         self.y = self.grid_y * TILE_SIZE
 
-        self.color = color
         self.hp = 3
         self.speed = 4
+
+        self.img = img
+        self.imgs = [f"{img}_1", f"{img}_2"]
+        self.frame_index = 0
+        self.animation_timer = 0
+        self.current_img = self.imgs[self.frame_index]
 
     def update(self):
         # hedef konum
@@ -48,9 +53,14 @@ class Entity:
         elif self.y > target_y:
             self.y -= min(self.speed, self.y - target_y)
 
+        self.animation_timer += 1
+        if self.animation_timer >= 30:
+            self.animation_timer = 0
+            self.frame_index = (self.frame_index + 1) % 2
+            self.current_img = self.imgs[self.frame_index]
+
     def draw(self):
-        rect = Rect((self.x, self.y), (TILE_SIZE, TILE_SIZE))
-        screen.draw.filled_rect(rect, self.color)
+        screen.blit(self.current_img, (self.x, self.y))
 
 class Player(Entity):
     def move(self, dx, dy):
@@ -63,7 +73,7 @@ class Player(Entity):
             self.grid_x = new_x
             self.grid_y = new_y
 
-our_hero = Player(0, 0, "red")
+our_hero = Player(0, 0, "hero_idle")
 
 def draw_grid():
     """
