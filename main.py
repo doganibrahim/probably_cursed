@@ -257,17 +257,32 @@ def update():
                 if p.is_poison:
                     our_hero.hp -= 1
                     
+                    if sound_enabled:
+                        sounds.hit.play()
+                    
                     if our_hero.hp <= 0:
                         game_state = "game_over"
+                        if sound_enabled:
+                            music.stop()
+                            sounds.game_over.play()
                 # zehirli değilse sayacı artır
                 else:
                     collected_potions += 1
+                    if sound_enabled:
+                        sounds.drink.play()
+                        
                     if collected_potions >= 3:
                         game_state = "win"
+                        if sound_enabled:
+                            music.stop()
+                            sounds.win.play()
 
         # kahramanımız ve zombi veya robot aynı hücredeyse yandık
         if (our_hero.grid_x == zombie.grid_x and our_hero.grid_y == zombie.grid_y) or (our_hero.grid_x == robot.grid_x and our_hero.grid_y == robot.grid_y):
             our_hero.hp -= 1
+            
+            if sound_enabled:
+                sounds.hit.play()
             
             # hop başlangıç noktasına ışınlan
             our_hero.grid_x = 0
@@ -278,6 +293,9 @@ def update():
             # can sıfırlandıysa
             if our_hero.hp <= 0:
                 game_state = "game_over"
+                if sound_enabled:
+                    music.stop()
+                    sounds.game_over.play()
 
 def on_mouse_down(pos):
     global game_state, sound_enabled, collected_potions
@@ -288,11 +306,19 @@ def on_mouse_down(pos):
         if play_btn.collidepoint(pos):
             print("Emin misin? Basarilar!")
             game_state = "play"
+            
+            if sound_enabled:
+                music.play("bg_music")
         
         # tıklanan nokta sound butonunun içinde mi?
         elif sound_btn.collidepoint(pos):
             sound_enabled = not sound_enabled # sound_enabled'ı toggle et (true ise false, false ise true yap)
             print(f"Ses durumu: {sound_enabled}")
+            
+            if not sound_enabled:
+                music.stop()
+            elif game_state == "play" and sound_enabled:
+                music.play("bg_music")
 
         elif exit_btn.collidepoint(pos):
             print("Olamaz! Nereye gidiyorsun?")
