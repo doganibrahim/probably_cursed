@@ -141,6 +141,7 @@ class Enemy(Entity):
 
 our_hero = Player(0, 0, "hero", {"idle": 2, "walk": 8})
 zombie = Enemy(10, 5, "zombie", {"idle": 2, "walk": 4}, "x", 3)
+robot = Enemy(15, 2, "robot", {"idle": 2, "walk": 4}, "y", 4)
 
 def draw_grid():
     """
@@ -184,6 +185,7 @@ def draw():
         draw_grid()
         our_hero.draw()
         zombie.draw()
+        robot.draw()
 
         # sol üstte canımız
         screen.draw.text(f"CAN: {our_hero.hp}", topleft=(20, 20), fontsize=40, color="red")
@@ -201,8 +203,11 @@ def update():
         zombie.bot_move()
         zombie.update()
 
+        robot.bot_move()
+        robot.update()
+
         # kahramanımız ve zombi aynı hücredeyse yandık
-        if our_hero.grid_x == zombie.grid_x and our_hero.grid_y == zombie.grid_y:
+        if (our_hero.grid_x == zombie.grid_x and our_hero.grid_y == zombie.grid_y) or (our_hero.grid_x == robot.grid_x and our_hero.grid_y == robot.grid_y):
             our_hero.hp -= 1
             
             # hop başlangıç noktasına ışınlan
