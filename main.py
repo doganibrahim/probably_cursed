@@ -139,9 +139,37 @@ class Enemy(Entity):
                     
                     self.grid_y = new_y
 
+class Potion:
+    def __init__(self, grid_x, grid_y, img, is_poison=False):
+        self.grid_x = grid_x
+        self.grid_y = grid_y
+        self.is_poison = is_poison
+        self.collected = False
+
+        self.actor = Actor(img)
+
+        center_x = (self.grid_x * TILE_SIZE) + (TILE_SIZE //  2)
+        bottom_y = (self.grid_y * TILE_SIZE) + TILE_SIZE
+
+        self.actor.midbottom = (center_x, bottom_y)
+
+    def draw(self):
+        if not self.collected:
+            self.actor.draw()
+
+
 our_hero = Player(0, 0, "hero", {"idle": 2, "walk": 8})
 zombie = Enemy(10, 5, "zombie", {"idle": 2, "walk": 4}, "x", 3)
 robot = Enemy(15, 2, "robot", {"idle": 2, "walk": 4}, "y", 4)
+
+# iksirleri haritaya diziyoruz (1 tanesi zehirli)
+potions = [
+    Potion(17, 2, "potion_1"),
+    Potion(18, 5, "potion_2"),
+    Potion(15, 3, "potion_3"),
+    Potion(17, 6, "potion_4", is_poison=True)
+]
+collected_potions = 0
 
 def draw_grid():
     """
@@ -161,7 +189,6 @@ def draw_grid():
             screen.draw.filled_rect(Rect((x, y), (TILE_SIZE, TILE_SIZE)), color)
 
 def draw():
-    # şimdilik ekranı geçici bir renkle dolduralım
     screen.fill((68, 68, 69))
 
     if game_state == "menu":
@@ -183,20 +210,35 @@ def draw():
 
     elif game_state == "play":
         draw_grid()
+
+        # önce iksirleri çizelim ki kahramanımız üstlerine basabilsin
+        for p in potions:
+            p.draw()
+
         our_hero.draw()
         zombie.draw()
         robot.draw()
 
         # sol üstte canımız
         screen.draw.text(f"CAN: {our_hero.hp}", topleft=(20, 20), fontsize=40, color="red")
+        
+        # toplanan iksir sayacı
+        screen.draw.text(f"IKSIR: {collected_potions}/3", topleft=(20, 60), fontsize=40, color="yellow")
+
+        screen.draw.text("DIKKAT: Kirmizi iksirlerden uzak dur!", topleft=(20, 100), fontsize=30, color="red")
 
     # maalesef kaybettik
     elif game_state == "game_over":
         screen.draw.text("OYUN BITTI!", center=(500, 250), fontsize=80, color="red")
         screen.draw.text("Menuye Don", center=(500, 350), fontsize=40, color="white")
 
+    # kazandık, süper
+    elif game_state == "win":
+        screen.draw.text("KAZANDIN!", center=(500, 250), fontsize=80, color="green")
+        screen.draw.text("Menuye Don", center=(500, 350), fontsize=40, color="white")
+
 def update():
-    global game_state
+    global game_state, collected_potions
     our_hero.update()
 
     if game_state == "play":
@@ -206,7 +248,24 @@ def update():
         robot.bot_move()
         robot.update()
 
-        # kahramanımız ve zombi aynı hücredeyse yandık
+        # iksir toplama kontrolleri
+        for p in potions:
+            if not p.collected and our_hero.grid_x == p.grid_x and our_hero.grid_y == p.grid_y:
+                p.collected = True
+                
+                # zehirliyse canımız azalsın
+                if p.is_poison:
+                    our_hero.hp -= 1
+                    
+                    if our_hero.hp <= 0:
+                        game_state = "game_over"
+                # zehirli değilse sayacı artır
+                else:
+                    collected_potions += 1
+                    if collected_potions >= 3:
+                        game_state = "win"
+
+        # kahramanımız ve zombi veya robot aynı hücredeyse yandık
         if (our_hero.grid_x == zombie.grid_x and our_hero.grid_y == zombie.grid_y) or (our_hero.grid_x == robot.grid_x and our_hero.grid_y == robot.grid_y):
             our_hero.hp -= 1
             
@@ -221,7 +280,7 @@ def update():
                 game_state = "game_over"
 
 def on_mouse_down(pos):
-    global game_state, sound_enabled
+    global game_state, sound_enabled, collected_potions
 
     # menüdeysek tıklamaların sonuçları
     if game_state == "menu":
@@ -239,10 +298,21 @@ def on_mouse_down(pos):
             print("Olamaz! Nereye gidiyorsun?")
             exit()
 
-    # game over ekranındayken tıklarsak menüye dönelim ve canı fulleyelim
-    elif game_state == "game_over":
+    # game over veya win ekranındayken tıklarsak menüye dönelim ve her şeyi sıfırlayalım
+    elif game_state == "game_over" or game_state == "win":
         game_state = "menu"
         our_hero.hp = 3
+        collected_potions = 0
+        
+        # kahramanı başa al
+        our_hero.grid_x = 0
+        our_hero.grid_y = 0
+        our_hero.x = 0
+        our_hero.y = 0
+
+        # iksirleri haritaya geri koy
+        for p in potions:
+            p.collected = False
 
 def on_key_down(key):
     if game_state == "play":
