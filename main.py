@@ -21,6 +21,20 @@ play_btn = Rect((400, 200), (200, 50))
 sound_btn = Rect((400, 300), (200, 50))
 exit_btn = Rect((400, 400), (200, 50))
 
+# duvar koordinatları
+wall_coords = [
+    (5, 2), (5, 3), (5, 4), (5, 5),
+    (12, 7), (13, 7), (14, 7), (15, 7), (16,7), (19,7),
+    (8, 8), (8, 9), (8, 10)
+]
+
+def is_walkable(grid_x, grid_y):
+    # gidilmek istenen yer hem harita sınırları içinde mi, hem de duvar yok mu?
+    if 0 <= grid_x < COLS and 0 <= grid_y < ROWS:
+        if (grid_x, grid_y) not in wall_coords:
+            return True
+    return False
+
 class Entity:
     def __init__(self, grid_x, grid_y, base_name, frame_counts):
         self.grid_x = grid_x
@@ -98,8 +112,8 @@ class Player(Entity):
         new_x = self.grid_x + dx
         new_y = self.grid_y + dy
 
-        # ekrandan çıkmaması için
-        if 0 <= new_x < COLS and 0 <= new_y < ROWS:
+        # ekrandan çıkmaması ve duvara çarpmaması için
+        if is_walkable(new_x, new_y):
             self.grid_x = new_x
             self.grid_y = new_y
 
@@ -123,8 +137,8 @@ class Enemy(Entity):
                 if self.patrol_axis == "x":
                     new_x = self.grid_x + self.direction
 
-                    # menzilini aşmışsa veya ekranın dışına çıkmışsa
-                    if abs(new_x - self.start_x) >= self.patrol_dist or not (0 <= new_x < COLS):
+                    # menzilini aşmışsa veya duvara çarpmışsa
+                    if abs(new_x - self.start_x) >= self.patrol_dist or not is_walkable(new_x, self.grid_y):
                         self.direction *= -1
                         new_x = self.grid_x + self.direction
 
@@ -133,7 +147,7 @@ class Enemy(Entity):
                 elif self.patrol_axis == "y":
                     new_y = self.grid_y + self.direction
                     
-                    if abs(new_y - self.start_y) >= self.patrol_dist or not (0 <= new_y < ROWS):
+                    if abs(new_y - self.start_y) >= self.patrol_dist or not is_walkable(self.grid_x, new_y):
                         self.direction *= -1
                         new_y = self.grid_y + self.direction
                     
@@ -210,6 +224,10 @@ def draw():
 
     elif game_state == "play":
         draw_grid()
+
+        # duvarları çizdirelim
+        for wx, wy in wall_coords:
+            screen.blit("wall", (wx * TILE_SIZE, wy * TILE_SIZE))
 
         # önce iksirleri çizelim ki kahramanımız üstlerine basabilsin
         for p in potions:
